@@ -1,39 +1,29 @@
 package com.github.gcnyin.spider
 
 import com.github.gcnyin.spider.Dto._
+import pureconfig.ConfigSource
+import pureconfig.generic.auto._
 import sttp.tapir.server.ziohttp.ZioHttpInterpreter
 import sttp.tapir.ztapir._
 import zhttp.service.Server
 import zio.kafka.producer._
-import zio.kafka.serde.Serde
 import zio.{Scope, ZIO}
 
 class App {
-  private val producerSettings: ProducerSettings = ProducerSettings(List("localhost:9092"))
 
   import Api._
 
   private val healthCheckLogic: ZServerEndpoint[Any, Any] =
     healthCheckEndpoint.zServerLogic(_ => ZIO.succeed(Message("200", "success")))
 
-  private def updateModuleInfoLogic(kafkaProducer: Producer): ZServerEndpoint[Any, Any] =
-    updateModuleInfoEndpoint.zServerLogic(moduleInfo => {
-      kafkaProducer
-        .produce(
-          "module_info",
-          s"${moduleInfo.group}.${moduleInfo.name}",
-          moduleInfo.version,
-          Serde.string,
-          Serde.string)
-        .catchAll(t => ZIO.fail(Message("500", t.getMessage)))
-        .map(_ => Message("200", "success"))
-    })
-
-  def run(port: Int): ZIO[Scope, Throwable, Nothing] =
+  def run(port: Int): ZIO[Scope, Throwable, Unit] =
     for {
-      producer <- Producer.make(producerSettings)
+      config <- ZIO.fromEither(ConfigSource.default.load[Config])
+        .mapError(f => new RuntimeException(f.head.description))
+      producer <- Producer.make(ProducerSettings(config.kafka.bootstrapServers))
+      service = new ModuleInfoService(producer, config.kafka.topic)
       healthCheckApp = ZioHttpInterpreter().toHttp(healthCheckLogic)
-      updateModuleInfoApp = ZioHttpInterpreter().toHttp(updateModuleInfoLogic(producer))
+      updateModuleInfoApp = ZioHttpInterpreter().toHttp(updateModuleInfoEndpoint.zServerLogic(service.update))
       app = healthCheckApp ++ updateModuleInfoApp
       _ <- Server.start(port, app)
     } yield ()

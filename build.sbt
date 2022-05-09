@@ -8,6 +8,7 @@ val zioHttpVersion = "2.0.0-RC7"
 val quillVersion = "3.17.0-RC3"
 val log4jVersion = "2.17.2"
 val zioKafkaVersion = "2.0.0-M3"
+val pureConfigVersion = "0.17.1"
 
 lazy val root = (project in file("."))
   .enablePlugins(JavaAppPackaging)
@@ -17,6 +18,7 @@ lazy val root = (project in file("."))
       "com.softwaremill.sttp.tapir" %% "tapir-zio-http-server" % tapirVersion,
       "com.softwaremill.sttp.tapir" %% "tapir-json-circe" % tapirVersion,
       "com.softwaremill.sttp.tapir" %% "tapir-jsoniter-scala" % tapirVersion,
+      "com.github.pureconfig" %% "pureconfig" % pureConfigVersion,
       //"io.getquill" %% "quill-zio" % quillVersion,
       //"io.getquill" %% "quill-jasync-mysql" % quillVersion,
       "dev.zio" %% "zio" % zioVersion,
