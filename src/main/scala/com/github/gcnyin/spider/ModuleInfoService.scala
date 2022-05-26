@@ -9,7 +9,7 @@ import zio.{Scope, ZIO}
 
 class ModuleInfoService(kafkaProducer: Producer, kafkaTopic: String) {
 
-  def update(module: RichModuleInfo): ZIO[Scope, Message, Message] = {
+  def update(module: ModuleInfo): ZIO[Scope, Message, Message] = {
     val key = s"${module.group}.${module.name}"
     kafkaProducer
       .produce(kafkaTopic, key, module.asJson.noSpaces, Serde.string, Serde.string)

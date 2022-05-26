@@ -10,14 +10,14 @@ object Api {
   val messageBody: EndpointIO.Body[String, Message] =
     jsonBody[Message].example(Message("1001", "User not found"))
 
-  private val moduleInfoBody: EndpointIO.Body[String, ModuleInfo] =
-    jsonBody[ModuleInfo].example(ModuleInfo("com.github.gcnyin", "spider", "0.1.0-SNAPSHOT"))
+  private val versionInfoBody: EndpointIO.Body[String, VersionInfo] =
+    jsonBody[VersionInfo].example(VersionInfo("com.github.gcnyin", "spider", "0.1.0-SNAPSHOT"))
 
-  private val richModuleInfoBody: EndpointIO.Body[String, RichModuleInfo] =
-    jsonBody[RichModuleInfo].example(
-      RichModuleInfo(
+  private val moduleInfoBody: EndpointIO.Body[String, ModuleInfo] =
+    jsonBody[ModuleInfo].example(
+      ModuleInfo(
         "com.github.gcnyin", "spider", "0.1.0-SNAPSHOT",
-        Seq(ModuleInfo("com.github.gcnyin", "slisp", "1.3.2"))
+        Seq(VersionInfo("com.github.gcnyin", "slisp", "1.3.2"))
       )
     )
 
@@ -30,11 +30,11 @@ object Api {
       .get
       .out(messageBody)
 
-  val updateModuleInfoEndpoint: Endpoint[Unit, RichModuleInfo, Message, Message, Any] =
+  val updateModuleInfoEndpoint: Endpoint[Unit, ModuleInfo, Message, Message, Any] =
     basicEndpoint
       .in("module-info")
       .post
-      .in(richModuleInfoBody)
+      .in(moduleInfoBody)
       .description("update module info")
       .out(messageBody)
 }
